@@ -7,17 +7,14 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -44,9 +40,9 @@ import echo.music.iad1tya.ui.component.IconButton
 import echo.music.iad1tya.ui.component.Material3SettingsGroup
 import echo.music.iad1tya.ui.component.Material3SettingsItem
 import echo.music.iad1tya.ui.utils.backToMain
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
+
+private const val GITHUB_PROFILE_URL = "https://github.com/techprem324"
+private const val GITHUB_AVATAR_URL = "https://github.com/techprem324.png"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,34 +53,6 @@ fun AboutScreen(
   highlightKey: String? = null
 ) {
   val uriHandler = LocalUriHandler.current
-
-  data class Contributor(val login: String, val avatarUrl: String, val htmlUrl: String)
-  var contributors by remember { mutableStateOf<List<Contributor>>(emptyList()) }
-
-  LaunchedEffect(Unit) {
-    withContext(Dispatchers.IO) {
-      try {
-        val url = java.net.URL("https://api.github.com/repos/EchoMusicApp/Echo-Music/contributors")
-        val json = url.openStream().bufferedReader().use { it.readText() }
-        val array = JSONArray(json)
-        val list = mutableListOf<Contributor>()
-        for (i in 0 until array.length()) {
-          val obj = array.getJSONObject(i)
-          list.add(
-            Contributor(
-              obj.getString("login"),
-              obj.getString("avatar_url"),
-              obj.getString("html_url")
-            )
-          )
-        }
-        contributors = list
-      } catch (e: Exception) {
-        e.printStackTrace()
-      }
-    }
-  }
-  val context = LocalContext.current
 
   Scaffold(
     modifier = Modifier.fillMaxSize(),
@@ -140,26 +108,28 @@ fun AboutScreen(
     ) {
       item { AboutAppCard() }
 
-      if (contributors.isNotEmpty()) {
-        item {
-          Column(modifier = Modifier.fillMaxWidth()) {
-            echo.music.iad1tya.ui.component.PreferenceGroupTitle(title = "Contributors")
-            Row(
-              modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-              horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-              contributors.forEach { contributor ->
-                coil3.compose.AsyncImage(
-                  model = contributor.avatarUrl,
-                  contentDescription = contributor.login,
-                  modifier =
-                    Modifier.size(48.dp).clip(CircleShape).clickable {
-                      uriHandler.openUri(contributor.htmlUrl)
-                    },
-                  contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                )
-              }
-            }
+      item {
+        Column(modifier = Modifier.fillMaxWidth()) {
+          echo.music.iad1tya.ui.component.PreferenceGroupTitle(title = "Contributors")
+          Column(
+            modifier =
+              Modifier.clickable { uriHandler.openUri(GITHUB_PROFILE_URL) }
+                .padding(top = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+          ) {
+            coil3.compose.AsyncImage(
+              model = GITHUB_AVATAR_URL,
+              contentDescription = "GitHub profile picture for techprem324",
+              modifier = Modifier.size(48.dp).clip(CircleShape),
+              contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+              error = painterResource(R.drawable.person),
+              placeholder = painterResource(R.drawable.person)
+            )
+            Text(
+              text = "techprem324",
+              style = MaterialTheme.typography.labelMedium,
+              color = MaterialTheme.colorScheme.onSurface
+            )
           }
         }
       }
@@ -172,96 +142,18 @@ fun AboutScreen(
               Material3SettingsItem(
                 icon = painterResource(R.drawable.website),
                 title = { Text("Website") },
-                description = { Text("iad1tya.cyou") },
-                onClick = { uriHandler.openUri("https://iad1tya.cyou") }
-              ),
-              Material3SettingsItem(
-                icon = painterResource(R.drawable.ic_instagram_new),
-                title = { Text("Instagram") },
-                description = { Text("@iad1tya") },
-                onClick = { uriHandler.openUri("https://instagram.com/iad1tya") }
+                description = { Text("techprem324.github.io/portfolio/") },
+                onClick = { uriHandler.openUri("https://techprem324.github.io/portfolio/") }
               ),
               Material3SettingsItem(
                 icon = painterResource(R.drawable.ic_x_new),
                 title = { Text("X (Twitter)") },
-                description = { Text("@xad1tya") },
-                onClick = { uriHandler.openUri("https://x.com/xad1tya") }
+                description = { Text("@prem_sri889") },
+                onClick = { uriHandler.openUri("https://x.com/prem_sri889") }
               )
             )
         )
       }
-
-      item {
-        Material3SettingsGroup(
-          title = "Support",
-          items =
-            listOf(
-              Material3SettingsItem(
-                icon = painterResource(R.drawable.coffee),
-                title = { Text("Buy Me a Coffee") },
-                description = { Text("buymeacoffee.com/iad1tya") },
-                onClick = { uriHandler.openUri("https://buymeacoffee.com/iad1tya") }
-              ),
-              Material3SettingsItem(
-                icon = painterResource(R.drawable.ic_patreon_new),
-                title = { Text("Patreon") },
-                description = { Text("patreon.com/cw/iad1tya") },
-                onClick = { uriHandler.openUri("https://www.patreon.com/cw/iad1tya") }
-              ),
-              Material3SettingsItem(
-                icon = painterResource(R.drawable.upi_new),
-                title = { Text("UPI") },
-                description = { Text("iad1tya@upi") },
-                onClick = {
-                  uriHandler.openUri(
-                    "https://intradeus.github.io/http-protocol-redirector/?r=upi://pay?pa=iad1tya@upi&pn=Aditya%20Yadav&am=&tn=Thank%20You%20so%20much%20for%20this%20support"
-                  )
-                }
-              )
-            )
-        )
-      }
-
-      item {
-        Material3SettingsGroup(
-          title = "Community",
-          items =
-            listOf(
-              Material3SettingsItem(
-                icon = painterResource(R.drawable.ic_discord_new),
-                title = { Text("Discord") },
-                description = { Text("discord.gg/Xt5hgsJJuA") },
-                onClick = { uriHandler.openUri("https://discord.gg/Xt5hgsJJuA") }
-              )
-            )
-        )
-      }
-
-      /* item {
-          AboutSectionCard(title = "App") {
-              AboutActionRow(
-                  icon = painterResource(R.drawable.github),
-                  title = "GitHub",
-                  subtitle = "EchoMusicApp/Echo-Music",
-                  onClick = { uriHandler.openUri("https://github.com/EchoMusicApp/Echo-Music") },
-              )
-              AboutDivider()
-              AboutActionRow(
-                  icon = painterResource(R.drawable.ic_discord_new),
-                  title = "Discord",
-                  subtitle = "discord.gg/EcfV3AxH5c",
-                  onClick = { uriHandler.openUri("https://discord.gg/EcfV3AxH5c") },
-              )
-              AboutDivider()
-              AboutActionRow(
-                  icon = painterResource(R.drawable.ic_telegram_new),
-                  title = "Telegram",
-                  subtitle = "t.me/EchoMusicApp",
-                  onClick = { uriHandler.openUri("https://t.me/EchoMusicApp") },
-              )
-          }
-      } */
-
     }
   }
 }
@@ -323,11 +215,13 @@ private fun AboutAppCard() {
         )
       } else {
         coil3.compose.AsyncImage(
-          model = "https://avatars.githubusercontent.com/u/147871321?v=4",
-          contentDescription = null,
+          model = GITHUB_AVATAR_URL,
+          contentDescription = "GitHub profile picture for techprem324",
           modifier =
             Modifier.fillMaxSize().graphicsLayer { rotationY = 180f }, // Un-flip the backside image
-          contentScale = androidx.compose.ui.layout.ContentScale.Crop
+          contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+          error = painterResource(R.drawable.person),
+          placeholder = painterResource(R.drawable.person)
         )
       }
     }
@@ -335,7 +229,7 @@ private fun AboutAppCard() {
     Spacer(Modifier.height(4.dp))
 
     Text(
-      text = if (rotation <= 90f) "Echo Music" else "Developed by Aditya",
+      text = if (rotation <= 90f) "Echo Music" else "techprem324",
       style = MaterialTheme.typography.titleLarge,
       fontWeight = FontWeight.Bold,
       color = MaterialTheme.colorScheme.onSurface,
